@@ -13,22 +13,33 @@ export type Database = {
         Row: {
           id: string
           message: string
+          profile_id: string | null
           timestamp: string
           username: string
         }
         Insert: {
           id?: string
           message: string
+          profile_id?: string | null
           timestamp?: string
           username: string
         }
         Update: {
           id?: string
           message?: string
+          profile_id?: string | null
           timestamp?: string
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "discussion_messages_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subject_content: {
         Row: {
@@ -66,6 +77,33 @@ export type Database = {
           subject_id?: string
           tag?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          about: string | null
+          avatar_url: string | null
+          created_at: string
+          id: string
+          last_active: string
+          username: string
+        }
+        Insert: {
+          about?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          last_active?: string
+          username: string
+        }
+        Update: {
+          about?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          last_active?: string
+          username?: string
         }
         Relationships: []
       }
