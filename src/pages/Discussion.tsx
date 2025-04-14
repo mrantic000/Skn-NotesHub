@@ -1,45 +1,88 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Book, Send, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock chat data
-const initialMessages = [
-  {
-    id: 1,
-    user: "Raj",
-    message: "Hey everyone! Anyone has the question papers for last year's DBMS exam?",
-    timestamp: "10:30 AM",
-  },
-  {
-    id: 2,
-    user: "Priya",
-    message: "I've uploaded them to the DBMS section under Imp Questions tag!",
-    timestamp: "10:35 AM",
-  },
-  {
-    id: 3,
-    user: "Arjun",
-    message: "Thanks Priya! Could someone share M3 notes as well?",
-    timestamp: "10:40 AM",
-  },
-  {
-    id: 4,
-    user: "Meera",
-    message: "I'll upload my M3 notes by evening. They cover all the important topics.",
-    timestamp: "10:45 AM",
-  },
-];
+interface Message {
+  id: string;
+  user: string;
+  message: string;
+  timestamp: string;
+}
 
 const Discussion = () => {
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [username, setUsername] = useState("");
   const [isJoined, setIsJoined] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch initial messages
+  useEffect(() => {
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from('discussion_messages')
+        .select('*')
+        .order('timestamp', { ascending: true });
+        
+      if (error) {
+        console.error("Error fetching messages:", error);
+        toast.error("Couldn't load messages");
+        return;
+      }
+      
+      if (data) {
+        const formattedMessages = data.map(msg => ({
+          id: msg.id,
+          user: msg.username,
+          message: msg.message,
+          timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }));
+        
+        setMessages(formattedMessages);
+      }
+    };
+    
+    fetchMessages();
+  }, []);
+  
+  // Subscribe to real-time updates
+  useEffect(() => {
+    if (!isJoined) return;
+    
+    const channel = supabase
+      .channel('public:discussion_messages')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'discussion_messages' 
+      }, payload => {
+        const newMsg = payload.new as any;
+        const formattedMessage = {
+          id: newMsg.id,
+          user: newMsg.username,
+          message: newMsg.message,
+          timestamp: new Date(newMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        
+        setMessages(prev => [...prev, formattedMessage]);
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isJoined]);
+  
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleJoin = () => {
     if (!username.trim()) {
@@ -50,21 +93,22 @@ const Discussion = () => {
     toast.success(`Welcome to the discussion, ${username}!`);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const message = {
-      id: messages.length + 1,
-      user: username,
-      message: newMessage,
-      timestamp: timeString,
-    };
-
-    setMessages([...messages, message]);
-    setNewMessage("");
+    try {
+      const { error } = await supabase.from('discussion_messages').insert({
+        username: username,
+        message: newMessage
+      });
+      
+      if (error) throw error;
+      
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message. Please try again.");
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -162,6 +206,7 @@ const Discussion = () => {
                   </div>
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
 
             <div className="p-4 border-t bg-background">

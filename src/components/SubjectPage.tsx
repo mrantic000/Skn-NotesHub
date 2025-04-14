@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Book, ChevronRight, Home, Upload, Download, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SubjectPageProps {
   branch: string;
@@ -22,13 +23,14 @@ interface SubjectPageProps {
   description: string;
 }
 
-// Mock data for existing uploads
-const mockUploads = [
-  { id: 1, name: "End Sem Notes 2024.pdf", size: "2.4 MB", type: "PDF", tag: "Endsem" },
-  { id: 2, name: "Mid Term Question Paper.pdf", size: "1.1 MB", type: "PDF", tag: "Midterm" },
-  { id: 3, name: "Important Questions.docx", size: "890 KB", type: "DOCX", tag: "Imp Questions" },
-  { id: 4, name: "Tutorial Solutions.pdf", size: "3.2 MB", type: "PDF", tag: "Tutorial" },
-];
+interface SubjectContent {
+  id: string;
+  file_name: string;
+  file_type: string;
+  file_size: string;
+  tag: string;
+  file_url: string;
+}
 
 const SubjectPage: React.FC<SubjectPageProps> = ({
   branch,
@@ -40,6 +42,40 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
   const [file, setFile] = useState<File | null>(null);
   const [tag, setTag] = useState("Endsem");
   const [filter, setFilter] = useState("All");
+  const [uploads, setUploads] = useState<SubjectContent[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    fetchSubjectContent();
+  }, [branch, subjectId, filter]);
+  
+  const fetchSubjectContent = async () => {
+    setIsLoading(true);
+    try {
+      let query = supabase
+        .from('subject_content')
+        .select('*')
+        .eq('branch', branch)
+        .eq('subject_id', subjectId);
+        
+      if (filter !== 'All') {
+        query = query.eq('tag', filter);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (data) {
+        setUploads(data as SubjectContent[]);
+      }
+    } catch (error) {
+      console.error('Error fetching subject content:', error);
+      toast.error('Failed to load resources. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -47,30 +83,76 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
     }
   };
   
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!file) {
       toast.error("Please select a file to upload");
       return;
     }
     
-    // Here we would normally upload to Supabase storage
-    // Since we don't have Supabase connected yet, we'll just show a success message
-    toast.success(`${file.name} uploaded successfully!`);
-    setFile(null);
+    setIsLoading(true);
     
-    // Reset the file input
-    const fileInput = document.getElementById("file-upload") as HTMLInputElement;
-    if (fileInput) fileInput.value = "";
+    try {
+      // 1. Upload the file to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${subjectId}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `${branch}/${subjectId}/${fileName}`;
+      
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from('subject-files')
+        .upload(filePath, file);
+        
+      if (storageError) throw storageError;
+      
+      // 2. Get the public URL for the file
+      const { data: urlData } = await supabase.storage
+        .from('subject-files')
+        .getPublicUrl(filePath);
+        
+      if (!urlData?.publicUrl) {
+        throw new Error('Failed to get public URL for the file');
+      }
+      
+      // 3. Save file metadata to the database
+      const { error: dbError } = await supabase.from('subject_content').insert({
+        branch: branch,
+        subject_id: subjectId,
+        file_name: file.name,
+        file_type: fileExt?.toUpperCase() || 'DOC',
+        file_size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        file_url: urlData.publicUrl,
+        tag: tag
+      });
+      
+      if (dbError) throw dbError;
+      
+      toast.success(`${file.name} uploaded successfully!`);
+      setFile(null);
+      
+      // Refresh the file list
+      fetchSubjectContent();
+      
+      // Reset the file input
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      toast.error(`Upload failed: ${error.message || 'Please try again'}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  const handleDownload = (fileName: string) => {
-    // Here we would normally download from Supabase storage
+  const handleDownload = (fileUrl: string, fileName: string) => {
+    // Create a temporary link to download the file
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast.success(`Downloading ${fileName}`);
   };
-  
-  const filteredUploads = filter === "All" 
-    ? mockUploads 
-    : mockUploads.filter(upload => upload.tag === filter);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -142,7 +224,11 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                 </div>
               </div>
               
-              {filteredUploads.length > 0 ? (
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading resources...</p>
+                </div>
+              ) : uploads.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
@@ -155,11 +241,11 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUploads.map((upload) => (
+                      {uploads.map((upload) => (
                         <tr key={upload.id} className="border-b hover:bg-muted/50">
-                          <td className="py-3 px-2">{upload.name}</td>
-                          <td className="py-3 px-2">{upload.type}</td>
-                          <td className="py-3 px-2">{upload.size}</td>
+                          <td className="py-3 px-2">{upload.file_name}</td>
+                          <td className="py-3 px-2">{upload.file_type}</td>
+                          <td className="py-3 px-2">{upload.file_size}</td>
                           <td className="py-3 px-2">
                             <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
                               {upload.tag}
@@ -169,7 +255,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDownload(upload.name)}
+                              onClick={() => handleDownload(upload.file_url, upload.file_name)}
                               className="text-primary"
                             >
                               <Download className="mr-1 h-4 w-4" /> Download
@@ -228,8 +314,16 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                 </div>
                 
                 <div className="pt-4">
-                  <Button onClick={handleUpload} className="w-full sm:w-auto" disabled={!file}>
-                    <Upload className="mr-2 h-4 w-4" /> Upload Resource
+                  <Button 
+                    onClick={handleUpload} 
+                    className="w-full sm:w-auto" 
+                    disabled={!file || isLoading}
+                  >
+                    {isLoading ? "Uploading..." : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" /> Upload Resource
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
