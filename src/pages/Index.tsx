@@ -1,11 +1,24 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Book, Monitor, MessageSquare } from "lucide-react";
+import { Book, Monitor, MessageSquare, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    await signOut();
+    toast({
+      title: "Logged out",
+      description: "You have been logged out successfully",
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -15,13 +28,26 @@ const Index = () => {
             <Book size={28} />
             <h1 className="text-xl md:text-2xl font-bold">SKN NotesHub</h1>
           </Link>
-          <nav>
+          <nav className="flex items-center gap-4">
             <Button variant="ghost" asChild>
               <Link to="/discussion" className="flex items-center space-x-2">
                 <MessageSquare size={20} />
                 <span className="hidden md:inline">Discussion</span>
               </Link>
             </Button>
+            {user ? (
+              <Button variant="ghost" onClick={handleLogout}>
+                <LogOut size={20} className="mr-2" />
+                <span className="hidden md:inline">Logout</span>
+              </Button>
+            ) : (
+              <Button variant="ghost" asChild>
+                <Link to="/auth" className="flex items-center space-x-2">
+                  <LogIn size={20} />
+                  <span className="hidden md:inline">Login</span>
+                </Link>
+              </Button>
+            )}
           </nav>
         </div>
       </header>
