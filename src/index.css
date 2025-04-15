@@ -95,6 +95,10 @@
   }
 }
 
+.text-gradient-to-r {
+  @apply bg-clip-text text-transparent bg-gradient-to-r;
+}
+
 .card-hover {
   @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
 }
@@ -117,7 +121,7 @@
 }
 
 .page-title {
-  @apply text-3xl font-bold text-primary mb-6;
+  @apply text-3xl font-bold text-gradient-to-r from-indigo-700 to-purple-800 mb-6;
 }
 
 .section-title {
@@ -138,4 +142,23 @@
 
 .subject-icon {
   @apply text-primary bg-primary/10 rounded-full p-2;
+}
+
+/* Animated background gradient */
+.bg-animated-gradient {
+  background: linear-gradient(-45deg, #6366f1, #8b5cf6, #d946ef, #ec4899);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }

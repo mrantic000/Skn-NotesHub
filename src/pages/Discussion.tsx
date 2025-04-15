@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import { Book, Send, User, Settings } from "lucide-react";
+import { Send, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -11,6 +9,7 @@ import { useProfile } from "@/context/ProfileContext";
 import ProfileModal from "@/components/ProfileModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/context/AuthContext";
+import Header from "@/components/Header";
 
 interface Message {
   id: string;
@@ -29,7 +28,6 @@ const Discussion = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Fetch initial messages
   useEffect(() => {
     const fetchMessages = async () => {
       const { data, error } = await supabase
@@ -69,7 +67,6 @@ const Discussion = () => {
     fetchMessages();
   }, []);
   
-  // Subscribe to real-time updates
   useEffect(() => {
     if (!profile) return;
     
@@ -82,7 +79,6 @@ const Discussion = () => {
       }, async payload => {
         const newMsg = payload.new as any;
         
-        // Fetch profile info if available
         let avatarUrl = null;
         if (newMsg.profile_id) {
           const { data } = await supabase
@@ -112,7 +108,6 @@ const Discussion = () => {
     };
   }, [profile]);
   
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -145,7 +140,7 @@ const Discussion = () => {
 
   if (profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-lg">Loading chat...</p>
@@ -156,45 +151,21 @@ const Discussion = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="bg-primary text-white py-4 px-4 md:px-8 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="flex items-center space-x-3">
-            <Book size={28} />
-            <h1 className="text-xl md:text-2xl font-bold">SKN NotesHub</h1>
-          </Link>
-          <nav className="flex items-center space-x-4">
-            <Link to="/cs" className="text-white hover:text-white/80">
-              CS
-            </Link>
-            <Link to="/it" className="text-white hover:text-white/80">
-              IT
-            </Link>
-            <Button 
-              variant="ghost" 
-              className="p-2" 
-              onClick={() => setIsProfileModalOpen(true)}
-            >
-              <ProfileAvatar className="h-8 w-8" />
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
-      {/* Main Content */}
-      <main className="flex-grow container mx-auto py-8 px-4">
-        <h1 className="page-title">Discussion Group</h1>
+      <main className="flex-grow container mx-auto py-8 px-4 bg-gradient-to-b from-slate-50 to-slate-100">
+        <h1 className="text-3xl font-bold text-gradient-to-r from-indigo-700 to-purple-800 mb-2">Discussion Group</h1>
         <p className="text-lg text-muted-foreground mb-8">
           Connect with other students to discuss subjects, share resources, and solve doubts.
         </p>
 
-        <Card className="p-0 overflow-hidden h-[70vh] flex flex-col">
-          <div className="bg-muted p-4 border-b flex justify-between items-center">
+        <Card className="p-0 overflow-hidden h-[70vh] flex flex-col shadow-lg border border-purple-100">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-4 border-b flex justify-between items-center text-white">
             <h3 className="font-semibold">Live Chat - SPPU StudyHub</h3>
             <Button 
               variant="ghost" 
               size="sm" 
-              className="p-2" 
+              className="p-2 text-white hover:bg-white/10"
               onClick={() => setIsProfileModalOpen(true)}
             >
               <Settings size={16} className="mr-2" />
@@ -202,7 +173,7 @@ const Discussion = () => {
             </Button>
           </div>
 
-          <ScrollArea className="flex-grow p-4">
+          <ScrollArea className="flex-grow p-4 bg-white">
             <div className="space-y-4">
               {messages.map((msg) => (
                 <div
@@ -224,7 +195,7 @@ const Discussion = () => {
                   ) : (
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        msg.profile_id === profile?.id ? "bg-primary" : "bg-accent"
+                        msg.profile_id === profile?.id ? "bg-purple-600" : "bg-indigo-600"
                       } text-white`}
                     >
                       {msg.user.charAt(0).toUpperCase()}
@@ -233,15 +204,17 @@ const Discussion = () => {
                   <div
                     className={`max-w-[70%] rounded-lg p-3 ${
                       msg.profile_id === profile?.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
+                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white"
+                        : "bg-gradient-to-r from-slate-100 to-slate-200"
                     }`}
                   >
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-medium text-sm">
                         {msg.profile_id === profile?.id ? "You" : msg.user}
                       </span>
-                      <span className="text-xs opacity-70">{msg.timestamp}</span>
+                      <span className={`text-xs ${msg.profile_id === profile?.id ? "text-white/70" : "text-gray-500"}`}>
+                        {msg.timestamp}
+                      </span>
                     </div>
                     <p className="text-sm">{msg.message}</p>
                   </div>
@@ -251,16 +224,19 @@ const Discussion = () => {
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t bg-background">
+          <div className="p-4 border-t bg-white">
             <div className="flex gap-2">
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message here..."
-                className="flex-grow"
+                className="flex-grow border-purple-200 focus-visible:ring-purple-400"
               />
-              <Button onClick={handleSendMessage} className="px-4">
+              <Button 
+                onClick={handleSendMessage} 
+                className="px-4 bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800"
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
@@ -273,8 +249,7 @@ const Discussion = () => {
         />
       </main>
 
-      {/* Footer */}
-      <footer className="bg-background py-6 border-t">
+      <footer className="bg-gradient-to-r from-gray-100 to-slate-100 py-6 border-t">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>© {new Date().getFullYear()} SKN NotesHub - SPPU Resources Hub</p>
         </div>

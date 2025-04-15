@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Book, ChevronRight, Home, Upload, Download, Tag } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronRight, Home, Upload, Download, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import Header from "@/components/Header";
 
 interface SubjectPageProps {
   branch: string;
@@ -38,7 +38,6 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
   subjectName,
   description,
 }) => {
-  const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [tag, setTag] = useState("Endsem");
   const [filter, setFilter] = useState("All");
@@ -92,7 +91,6 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
     setIsLoading(true);
     
     try {
-      // 1. Upload the file to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${subjectId}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${branch}/${subjectId}/${fileName}`;
@@ -103,7 +101,6 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
         
       if (storageError) throw storageError;
       
-      // 2. Get the public URL for the file
       const { data: urlData } = await supabase.storage
         .from('subject-files')
         .getPublicUrl(filePath);
@@ -112,7 +109,6 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
         throw new Error('Failed to get public URL for the file');
       }
       
-      // 3. Save file metadata to the database
       const { error: dbError } = await supabase.from('subject_content').insert({
         branch: branch,
         subject_id: subjectId,
@@ -128,10 +124,8 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
       toast.success(`${file.name} uploaded successfully!`);
       setFile(null);
       
-      // Refresh the file list
       fetchSubjectContent();
       
-      // Reset the file input
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
     } catch (error: any) {
@@ -143,7 +137,6 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
   };
   
   const handleDownload = (fileUrl: string, fileName: string) => {
-    // Create a temporary link to download the file
     const link = document.createElement('a');
     link.href = fileUrl;
     link.download = fileName;
@@ -156,24 +149,9 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="bg-primary text-white py-4 px-4 md:px-8 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="flex items-center space-x-3">
-            <Book size={28} />
-            <h1 className="text-xl md:text-2xl font-bold">SKN NotesHub</h1>
-          </Link>
-          <nav>
-            <Link to="/discussion" className="text-white hover:text-white/80">
-              Discussion
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
-      {/* Main Content */}
-      <main className="flex-grow container mx-auto py-8 px-4">
-        {/* Breadcrumbs */}
+      <main className="flex-grow container mx-auto py-8 px-4 bg-gradient-to-b from-slate-50 to-slate-100">
         <div className="breadcrumb">
           <Link to="/" className="breadcrumb-item flex items-center">
             <Home size={16} className="mr-1" /> Home
@@ -190,27 +168,27 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
           <span>{subjectName}</span>
         </div>
 
-        <h1 className="page-title">{subjectName}</h1>
+        <h1 className="text-3xl font-bold text-gradient-to-r from-indigo-700 to-purple-800 mb-2">{subjectName}</h1>
         <p className="text-lg text-muted-foreground mb-8">{description}</p>
 
         <Tabs defaultValue="view" className="w-full">
-          <TabsList className="grid w-full md:w-[400px] grid-cols-2">
-            <TabsTrigger value="view" className="flex items-center">
+          <TabsList className="grid w-full md:w-[400px] grid-cols-2 bg-slate-100 p-1">
+            <TabsTrigger value="view" className="flex items-center data-[state=active]:bg-gradient-to-r from-indigo-600 to-purple-600 data-[state=active]:text-white">
               <Download className="mr-2 h-4 w-4" /> View Resources
             </TabsTrigger>
-            <TabsTrigger value="upload" className="flex items-center">
+            <TabsTrigger value="upload" className="flex items-center data-[state=active]:bg-gradient-to-r from-indigo-600 to-purple-600 data-[state=active]:text-white">
               <Upload className="mr-2 h-4 w-4" /> Upload Resources
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="view" className="py-4">
-            <Card className="p-6">
+            <Card className="p-6 border border-purple-100 shadow-lg">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                <h3 className="text-xl font-semibold mb-2 md:mb-0">Available Resources</h3>
+                <h3 className="text-xl font-semibold mb-2 md:mb-0 text-indigo-800">Available Resources</h3>
                 <div className="flex items-center">
-                  <Tag className="mr-2 h-4 w-4" />
+                  <Tag className="mr-2 h-4 w-4 text-purple-600" />
                   <Select value={filter} onValueChange={setFilter}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[180px] border-purple-200">
                       <SelectValue placeholder="Filter by tag" />
                     </SelectTrigger>
                     <SelectContent>
@@ -226,37 +204,38 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
               
               {isLoading ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">Loading resources...</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mx-auto"></div>
+                  <p className="text-muted-foreground mt-4">Loading resources...</p>
                 </div>
               ) : uploads.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-lg border border-purple-100">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-2">Name</th>
-                        <th className="text-left py-3 px-2">Type</th>
-                        <th className="text-left py-3 px-2">Size</th>
-                        <th className="text-left py-3 px-2">Tag</th>
-                        <th className="text-right py-3 px-2">Action</th>
+                      <tr className="bg-gradient-to-r from-slate-100 to-purple-50 text-left">
+                        <th className="py-3 px-4 font-semibold text-indigo-900">Name</th>
+                        <th className="py-3 px-4 font-semibold text-indigo-900">Type</th>
+                        <th className="py-3 px-4 font-semibold text-indigo-900">Size</th>
+                        <th className="py-3 px-4 font-semibold text-indigo-900">Tag</th>
+                        <th className="text-right py-3 px-4 font-semibold text-indigo-900">Action</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-purple-100">
                       {uploads.map((upload) => (
-                        <tr key={upload.id} className="border-b hover:bg-muted/50">
-                          <td className="py-3 px-2">{upload.file_name}</td>
-                          <td className="py-3 px-2">{upload.file_type}</td>
-                          <td className="py-3 px-2">{upload.file_size}</td>
-                          <td className="py-3 px-2">
-                            <span className="inline-block px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+                        <tr key={upload.id} className="hover:bg-purple-50 transition-colors">
+                          <td className="py-3 px-4">{upload.file_name}</td>
+                          <td className="py-3 px-4">{upload.file_type}</td>
+                          <td className="py-3 px-4">{upload.file_size}</td>
+                          <td className="py-3 px-4">
+                            <span className="inline-block px-2 py-1 text-xs rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 font-medium">
                               {upload.tag}
                             </span>
                           </td>
-                          <td className="py-3 px-2 text-right">
+                          <td className="py-3 px-4 text-right">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
                               onClick={() => handleDownload(upload.file_url, upload.file_name)}
-                              className="text-primary"
+                              className="text-indigo-700 border-indigo-200 hover:bg-indigo-50"
                             >
                               <Download className="mr-1 h-4 w-4" /> Download
                             </Button>
@@ -267,16 +246,23 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-8">
+                <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-purple-200">
                   <p className="text-muted-foreground">No resources found with the selected filter.</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4 border-purple-200 text-purple-700 hover:bg-purple-50"
+                    onClick={() => setFilter("All")}
+                  >
+                    View all resources
+                  </Button>
                 </div>
               )}
             </Card>
           </TabsContent>
           
           <TabsContent value="upload" className="py-4">
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-6">Upload New Resource</h3>
+            <Card className="p-6 border border-purple-100 shadow-lg">
+              <h3 className="text-xl font-semibold mb-6 text-indigo-800">Upload New Resource</h3>
               <div className="space-y-4">
                 <div>
                   <label htmlFor="file-upload" className="block text-sm font-medium text-foreground mb-2">
@@ -285,7 +271,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                   <Input
                     id="file-upload"
                     type="file"
-                    className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 border-purple-200"
                     onChange={handleFileChange}
                   />
                   {file && (
@@ -300,7 +286,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                     Tag
                   </label>
                   <Select value={tag} onValueChange={setTag}>
-                    <SelectTrigger className="w-full" id="tag-select">
+                    <SelectTrigger className="w-full border-purple-200" id="tag-select">
                       <SelectValue placeholder="Select a tag" />
                     </SelectTrigger>
                     <SelectContent>
@@ -316,10 +302,15 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                 <div className="pt-4">
                   <Button 
                     onClick={handleUpload} 
-                    className="w-full sm:w-auto" 
+                    className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800" 
                     disabled={!file || isLoading}
                   >
-                    {isLoading ? "Uploading..." : (
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 mr-2 border-2 border-t-transparent border-white rounded-full"></div>
+                        Uploading...
+                      </>
+                    ) : (
                       <>
                         <Upload className="mr-2 h-4 w-4" /> Upload Resource
                       </>
@@ -332,8 +323,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
         </Tabs>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-background py-6 border-t">
+      <footer className="bg-gradient-to-r from-gray-100 to-slate-100 py-6 border-t">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>© {new Date().getFullYear()} SKN NotesHub - SPPU Resources Hub</p>
         </div>
