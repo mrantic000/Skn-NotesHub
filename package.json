@@ -13,6 +13,8 @@
   "scripts": {
   "deploy": "gh-pages -d build"
 }
+  "homepage": "https://mrantic000.github.io/your-repository-name"
+
 
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
