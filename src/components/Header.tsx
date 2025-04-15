@@ -19,10 +19,10 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 text-white py-2 px-4 md:px-8 shadow-lg">
+    <header className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 text-white py-3 px-4 md:px-8 shadow-lg">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-3">
-          <div className="flex items-center bg-white/95 p-1 rounded-full">
+          <div className="flex items-center bg-white/95 p-1.5 rounded-full shadow-md">
             <img 
               src="/lovable-uploads/37367b60-0456-479b-b535-11887cd5fecc.png" 
               alt="SKN NotesHub Logo" 
@@ -34,28 +34,30 @@ const Header = () => {
             <p className="text-xs text-white/80 hidden md:block">SMART STUDY STARTS HERE</p>
           </div>
         </Link>
-        <nav className="flex items-center gap-4">
-          <Link to="/cs" className="text-white hover:text-white/80 hidden md:inline">
+        <nav className="flex items-center gap-3 md:gap-4">
+          <Link to="/cs" className="text-white hover:text-white/80 transition-colors px-2 py-1 rounded hover:bg-white/10">
             CS
           </Link>
-          <Link to="/it" className="text-white hover:text-white/80 hidden md:inline">
+          <Link to="/it" className="text-white hover:text-white/80 transition-colors px-2 py-1 rounded hover:bg-white/10">
             IT
           </Link>
-          <Button variant="ghost" asChild className="text-white hover:bg-white/10">
-            <Link to="/discussion" className="flex items-center space-x-2">
-              <MessageSquare size={20} />
-              <span className="hidden md:inline">Discussion</span>
-            </Link>
-          </Button>
           {user ? (
-            <Button variant="ghost" onClick={handleLogout} className="text-white hover:bg-white/10">
-              <LogOut size={20} className="mr-2" />
-              <span className="hidden md:inline">Logout</span>
-            </Button>
+            <>
+              <Button variant="ghost" asChild className="text-white hover:bg-white/10">
+                <Link to="/discussion" className="flex items-center space-x-1">
+                  <MessageSquare size={18} />
+                  <span className="hidden md:inline">Discussion</span>
+                </Link>
+              </Button>
+              <Button variant="ghost" onClick={handleLogout} className="text-white hover:bg-white/10">
+                <LogOut size={18} className="mr-0 md:mr-2" />
+                <span className="hidden md:inline">Logout</span>
+              </Button>
+            </>
           ) : (
             <Button variant="ghost" asChild className="text-white hover:bg-white/10">
-              <Link to="/auth" className="flex items-center space-x-2">
-                <LogIn size={20} />
+              <Link to="/auth" className="flex items-center space-x-1">
+                <LogIn size={18} />
                 <span className="hidden md:inline">Login</span>
               </Link>
             </Button>

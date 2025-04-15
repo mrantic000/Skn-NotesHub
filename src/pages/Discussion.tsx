@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Send, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import ProfileModal from "@/components/ProfileModal";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Header";
+import { useNavigate } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -27,6 +29,15 @@ const Discussion = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!user && !profileLoading) {
+      toast.error("Please log in to access the discussion forum");
+      navigate("/auth");
+    }
+  }, [user, profileLoading, navigate]);
   
   useEffect(() => {
     const fetchMessages = async () => {
@@ -64,8 +75,10 @@ const Discussion = () => {
       }
     };
     
-    fetchMessages();
-  }, []);
+    if (user) {
+      fetchMessages();
+    }
+  }, [user]);
   
   useEffect(() => {
     if (!profile) return;
@@ -145,6 +158,23 @@ const Discussion = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-lg">Loading chat...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <Card className="p-8 text-center max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Login Required</h2>
+            <p className="mb-6">Please log in to access the discussion forum.</p>
+            <Button onClick={() => navigate('/auth')} className="bg-gradient-to-r from-indigo-600 to-purple-700">
+              Go to Login
+            </Button>
+          </Card>
+        </main>
       </div>
     );
   }

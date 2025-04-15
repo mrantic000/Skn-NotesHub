@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -19,6 +19,7 @@ import { Book, Phone, Key, LogIn, UserPlus, User, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Header from "@/components/Header";
 
 const loginSchema = z.object({
   id: z.string().min(3, "ID must be at least 3 characters"),
@@ -29,6 +30,7 @@ const registerSchema = z.object({
   mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   username: z.string().min(3, "Name must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
 });
 
 const Auth = () => {
@@ -38,6 +40,18 @@ const Auth = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate('/');
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -53,6 +67,7 @@ const Auth = () => {
       mobile: "",
       password: "",
       username: "",
+      email: "",
     },
   });
 
@@ -144,8 +159,9 @@ const Auth = () => {
 
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
     try {
-      // For simplicity, we'll use the mobile number as the email with a dummy domain
-      const email = `${values.mobile}@example.com`;
+      // Use the provided email directly instead of creating one from the mobile number
+      const email = values.email;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password: values.password,
@@ -185,7 +201,7 @@ const Auth = () => {
 
       toast({
         title: "Registration Successful",
-        description: "Your account has been created!",
+        description: "Your account has been created! You can now log in.",
       });
       setIsLogin(true);
     } catch (error: any) {
@@ -198,22 +214,14 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="bg-primary text-white py-4 px-4 md:px-8 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <Book size={28} />
-            <h1 className="text-xl md:text-2xl font-bold">SKN NotesHub</h1>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col">
+      <Header />
 
       {/* Main Content */}
       <main className="flex-grow flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-8">
+        <Card className="w-full max-w-md p-8 border border-purple-100 shadow-lg">
           <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold mb-2">
+            <h2 className="text-3xl font-bold mb-2 text-gradient-to-r from-indigo-700 to-purple-800">
               {isLogin ? "Login" : "Register"}
             </h2>
             <p className="text-muted-foreground">
@@ -261,7 +269,7 @@ const Auth = () => {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
+                <Button type="submit" className="w-full bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800" disabled={loginForm.formState.isSubmitting}>
                   {loginForm.formState.isSubmitting ? (
                     "Logging in..."
                   ) : (
@@ -329,6 +337,27 @@ const Auth = () => {
 
                 <FormField
                   control={registerForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <div className="flex">
+                          <User className="mr-2 h-4 w-4 mt-3" />
+                          <Input
+                            placeholder="Enter your email address"
+                            type="email"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={registerForm.control}
                   name="mobile"
                   render={({ field }) => (
                     <FormItem>
@@ -368,7 +397,7 @@ const Auth = () => {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={registerForm.formState.isSubmitting || isUploading}>
+                <Button type="submit" className="w-full bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800" disabled={registerForm.formState.isSubmitting || isUploading}>
                   {registerForm.formState.isSubmitting ? (
                     "Registering..."
                   ) : (
@@ -396,7 +425,7 @@ const Auth = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-background py-6 border-t">
+      <footer className="bg-gradient-to-r from-gray-100 to-slate-100 py-6 border-t">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>© {new Date().getFullYear()} SKN NotesHub - SPPU Resources Hub</p>
         </div>
