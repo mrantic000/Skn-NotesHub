@@ -1,12 +1,18 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Monitor, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Header from "@/components/Header";
 
 const Index = () => {
+  const navigate = useNavigate();
+  
+  const handleBranchClick = (path: string) => {
+    navigate(path);
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -34,33 +40,35 @@ const Index = () => {
           </h2>
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* CS Branch */}
-            <Card className="branch-card overflow-hidden border-purple-100 shadow-lg">
-              <Link to="/cs">
-                <div className="p-6 md:p-8 flex flex-col items-center text-center card-hover">
-                  <div className="bg-gradient-to-br from-indigo-100 to-purple-100 p-4 rounded-full mb-4">
-                    <Monitor className="h-10 w-10 text-indigo-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-indigo-900">Computer Science</h3>
-                  <p className="text-muted-foreground">
-                    Access resources for M3, PPL, SE, DSA, and MP
-                  </p>
+            <Card 
+              className="branch-card overflow-hidden border-purple-100 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300"
+              onClick={() => handleBranchClick("/cs")}
+            >
+              <div className="p-6 md:p-8 flex flex-col items-center text-center card-hover">
+                <div className="bg-gradient-to-br from-indigo-100 to-purple-100 p-4 rounded-full mb-4">
+                  <Monitor className="h-10 w-10 text-indigo-600" />
                 </div>
-              </Link>
+                <h3 className="text-xl font-semibold mb-2 text-indigo-900">Computer Science</h3>
+                <p className="text-muted-foreground">
+                  Access resources for M3, PPL, SE, DSA, and MP
+                </p>
+              </div>
             </Card>
             
             {/* IT Branch */}
-            <Card className="branch-card overflow-hidden border-purple-100 shadow-lg">
-              <Link to="/it">
-                <div className="p-6 md:p-8 flex flex-col items-center text-center card-hover">
-                  <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-4 rounded-full mb-4">
-                    <Monitor className="h-10 w-10 text-purple-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-purple-900">Information Technology</h3>
-                  <p className="text-muted-foreground">
-                    Access resources for CG, PA, DBMS, M3, and SE
-                  </p>
+            <Card 
+              className="branch-card overflow-hidden border-purple-100 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300"
+              onClick={() => handleBranchClick("/it")}
+            >
+              <div className="p-6 md:p-8 flex flex-col items-center text-center card-hover">
+                <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-4 rounded-full mb-4">
+                  <Monitor className="h-10 w-10 text-purple-600" />
                 </div>
-              </Link>
+                <h3 className="text-xl font-semibold mb-2 text-purple-900">Information Technology</h3>
+                <p className="text-muted-foreground">
+                  Access resources for CG, PA, DBMS, M3, and SE
+                </p>
+              </div>
             </Card>
           </div>
         </div>
