@@ -15,22 +15,21 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Book, Phone, Key, LogIn, UserPlus, User, Camera } from "lucide-react";
+import { Book, Key, LogIn, UserPlus, User, Camera, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Header from "@/components/Header";
 
 const loginSchema = z.object({
-  id: z.string().min(3, "ID must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const registerSchema = z.object({
-  mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
   username: z.string().min(3, "Name must be at least 3 characters"),
   email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const Auth = () => {
@@ -56,7 +55,7 @@ const Auth = () => {
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      id: "",
+      email: "",
       password: "",
     },
   });
@@ -64,19 +63,16 @@ const Auth = () => {
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      mobile: "",
-      password: "",
       username: "",
       email: "",
+      password: "",
     },
   });
 
   async function onLoginSubmit(values: z.infer<typeof loginSchema>) {
     try {
-      // For simplicity, we'll use the ID as the email with a dummy domain
-      const email = `${values.id}@example.com`;
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: values.email,
         password: values.password,
       });
 
@@ -159,7 +155,6 @@ const Auth = () => {
 
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
     try {
-      // Use the provided email directly instead of creating one from the mobile number
       const email = values.email;
       
       const { data, error } = await supabase.auth.signUp({
@@ -167,7 +162,6 @@ const Auth = () => {
         password: values.password,
         options: {
           data: {
-            mobile: values.mobile,
             username: values.username,
             avatar_url: avatarUrl,
           },
@@ -214,14 +208,14 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-indigo-100 flex flex-col">
       <Header />
 
       {/* Main Content */}
       <main className="flex-grow flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-8 border border-purple-100 shadow-lg">
+        <Card className="w-full max-w-md p-8 border border-purple-100 shadow-lg bg-white/90 backdrop-blur-sm">
           <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold mb-2 text-gradient-to-r from-indigo-700 to-purple-800">
+            <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-700 to-purple-800 bg-clip-text text-transparent">
               {isLogin ? "Login" : "Register"}
             </h2>
             <p className="text-muted-foreground">
@@ -239,12 +233,19 @@ const Auth = () => {
               >
                 <FormField
                   control={loginForm.control}
-                  name="id"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>User ID</FormLabel>
+                      <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your ID" {...field} />
+                        <div className="flex">
+                          <Mail className="mr-2 h-4 w-4 mt-3" />
+                          <Input
+                            type="email"
+                            placeholder="Enter your email"
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -258,11 +259,14 @@ const Auth = () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter your password"
-                          {...field}
-                        />
+                        <div className="flex">
+                          <Key className="mr-2 h-4 w-4 mt-3" />
+                          <Input
+                            type="password"
+                            placeholder="Enter your password"
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -320,12 +324,12 @@ const Auth = () => {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>Username</FormLabel>
                       <FormControl>
                         <div className="flex">
                           <User className="mr-2 h-4 w-4 mt-3" />
                           <Input
-                            placeholder="Enter your full name"
+                            placeholder="Enter your username"
                             {...field}
                           />
                         </div>
@@ -343,30 +347,10 @@ const Auth = () => {
                       <FormLabel>Email Address</FormLabel>
                       <FormControl>
                         <div className="flex">
-                          <User className="mr-2 h-4 w-4 mt-3" />
+                          <Mail className="mr-2 h-4 w-4 mt-3" />
                           <Input
                             placeholder="Enter your email address"
                             type="email"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={registerForm.control}
-                  name="mobile"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mobile Number</FormLabel>
-                      <FormControl>
-                        <div className="flex">
-                          <Phone className="mr-2 h-4 w-4 mt-3" />
-                          <Input
-                            placeholder="Enter your mobile number"
                             {...field}
                           />
                         </div>
@@ -415,6 +399,7 @@ const Auth = () => {
               variant="link"
               onClick={() => setIsLogin(!isLogin)}
               type="button"
+              className="text-indigo-600 hover:text-indigo-800"
             >
               {isLogin
                 ? "Don't have an account? Register"
