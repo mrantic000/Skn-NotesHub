@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, Home, Upload, Download, Tag } from "lucide-react";
@@ -194,9 +195,9 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                     <SelectContent>
                       <SelectItem value="All">All Resources</SelectItem>
                       <SelectItem value="Endsem">Endsem</SelectItem>
-                      <SelectItem value="Midterm">Midterm</SelectItem>
+                      <SelectItem value="Insem">Insem</SelectItem>
                       <SelectItem value="Imp Questions">Important Questions</SelectItem>
-                      <SelectItem value="Tutorial">Tutorial</SelectItem>
+                      <SelectItem value="Assignments">Assignments</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -291,9 +292,9 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Endsem">End Semester</SelectItem>
-                      <SelectItem value="Midterm">Mid Term</SelectItem>
+                      <SelectItem value="Insem">In Semester</SelectItem>
                       <SelectItem value="Imp Questions">Important Questions</SelectItem>
-                      <SelectItem value="Tutorial">Tutorial</SelectItem>
+                      <SelectItem value="Assignments">Assignments</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>

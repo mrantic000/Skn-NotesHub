@@ -24,7 +24,7 @@ const Header = () => {
         <Link to="/" className="flex items-center space-x-3">
           <div className="flex items-center bg-white/95 p-1.5 rounded-full shadow-md">
             <img 
-              src="/lovable-uploads/37367b60-0456-479b-b535-11887cd5fecc.png" 
+              src="/lovable-uploads/0747b574-70bb-4021-a6af-20052f48cb3a.png" 
               alt="SKN NotesHub Logo" 
               className="h-10 w-10 rounded-full"
             />
@@ -41,19 +41,17 @@ const Header = () => {
           <Link to="/it" className="text-white hover:text-white/80 transition-colors px-2 py-1 rounded hover:bg-white/10">
             IT
           </Link>
+          <Button variant="ghost" asChild className="text-white hover:bg-white/10">
+            <Link to="/discussion" className="flex items-center space-x-1">
+              <MessageSquare size={18} />
+              <span className="hidden md:inline">Discussion</span>
+            </Link>
+          </Button>
           {user ? (
-            <>
-              <Button variant="ghost" asChild className="text-white hover:bg-white/10">
-                <Link to="/discussion" className="flex items-center space-x-1">
-                  <MessageSquare size={18} />
-                  <span className="hidden md:inline">Discussion</span>
-                </Link>
-              </Button>
-              <Button variant="ghost" onClick={handleLogout} className="text-white hover:bg-white/10">
-                <LogOut size={18} className="mr-0 md:mr-2" />
-                <span className="hidden md:inline">Logout</span>
-              </Button>
-            </>
+            <Button variant="ghost" onClick={handleLogout} className="text-white hover:bg-white/10">
+              <LogOut size={18} className="mr-0 md:mr-2" />
+              <span className="hidden md:inline">Logout</span>
+            </Button>
           ) : (
             <Button variant="ghost" asChild className="text-white hover:bg-white/10">
               <Link to="/auth" className="flex items-center space-x-1">

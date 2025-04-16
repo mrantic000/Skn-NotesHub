@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Book, Key, LogIn, UserPlus, User, Camera, Mail } from "lucide-react";
+import { Key, LogIn, UserPlus, User, Camera, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -165,6 +165,7 @@ const Auth = () => {
             username: values.username,
             avatar_url: avatarUrl,
           },
+          emailRedirectTo: window.location.origin,
         },
       });
 
@@ -191,13 +192,28 @@ const Auth = () => {
           console.error("Error creating profile:", profileError);
           // Continue anyway, the profile creation will be handled by AuthContext
         }
+        
+        // Auto login after registration
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: values.email,
+          password: values.password,
+        });
+        
+        if (signInError) {
+          toast({
+            title: "Registration Complete",
+            description: "Your account has been created! Please log in.",
+          });
+          setIsLogin(true);
+          return;
+        }
+        
+        toast({
+          title: "Registration Successful",
+          description: "Your account has been created and you're now logged in!",
+        });
+        navigate("/");
       }
-
-      toast({
-        title: "Registration Successful",
-        description: "Your account has been created! You can now log in.",
-      });
-      setIsLogin(true);
     } catch (error: any) {
       toast({
         title: "Error",

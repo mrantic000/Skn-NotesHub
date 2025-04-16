@@ -40,36 +40,38 @@ const Index = () => {
           </h2>
           <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* CS Branch */}
-            <Card 
-              className="branch-card overflow-hidden border-purple-100 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300"
-              onClick={() => handleBranchClick("/cs")}
-            >
-              <div className="p-6 md:p-8 flex flex-col items-center text-center card-hover">
-                <div className="bg-gradient-to-br from-indigo-100 to-purple-100 p-4 rounded-full mb-4">
-                  <Monitor className="h-10 w-10 text-indigo-600" />
+            <Link to="/cs">
+              <Card 
+                className="branch-card overflow-hidden border-purple-100 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300"
+              >
+                <div className="p-6 md:p-8 flex flex-col items-center text-center card-hover">
+                  <div className="bg-gradient-to-br from-indigo-100 to-purple-100 p-4 rounded-full mb-4">
+                    <Monitor className="h-10 w-10 text-indigo-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 text-indigo-900">Computer Science</h3>
+                  <p className="text-muted-foreground">
+                    Access resources for M3, PPL, SE, DSA, and MP
+                  </p>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-indigo-900">Computer Science</h3>
-                <p className="text-muted-foreground">
-                  Access resources for M3, PPL, SE, DSA, and MP
-                </p>
-              </div>
-            </Card>
+              </Card>
+            </Link>
             
             {/* IT Branch */}
-            <Card 
-              className="branch-card overflow-hidden border-purple-100 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300"
-              onClick={() => handleBranchClick("/it")}
-            >
-              <div className="p-6 md:p-8 flex flex-col items-center text-center card-hover">
-                <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-4 rounded-full mb-4">
-                  <Monitor className="h-10 w-10 text-purple-600" />
+            <Link to="/it">
+              <Card 
+                className="branch-card overflow-hidden border-purple-100 shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300"
+              >
+                <div className="p-6 md:p-8 flex flex-col items-center text-center card-hover">
+                  <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-4 rounded-full mb-4">
+                    <Monitor className="h-10 w-10 text-purple-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 text-purple-900">Information Technology</h3>
+                  <p className="text-muted-foreground">
+                    Access resources for CG, PA, DBMS, M3, and SE
+                  </p>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-purple-900">Information Technology</h3>
-                <p className="text-muted-foreground">
-                  Access resources for CG, PA, DBMS, M3, and SE
-                </p>
-              </div>
-            </Card>
+              </Card>
+            </Link>
           </div>
         </div>
       </section>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import { Send, Settings } from "lucide-react";
+import { Send, Settings, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Header";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -30,14 +31,6 @@ const Discussion = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!user && !profileLoading) {
-      toast.error("Please log in to access the discussion forum");
-      navigate("/auth");
-    }
-  }, [user, profileLoading, navigate]);
   
   useEffect(() => {
     const fetchMessages = async () => {
@@ -75,14 +68,9 @@ const Discussion = () => {
       }
     };
     
-    if (user) {
-      fetchMessages();
-    }
-  }, [user]);
-  
-  useEffect(() => {
-    if (!profile) return;
+    fetchMessages();
     
+    // Setup real-time updates
     const channel = supabase
       .channel('public:discussion_messages')
       .on('postgres_changes', { 
@@ -119,13 +107,18 @@ const Discussion = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile]);
+  }, []);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSendMessage = async () => {
+    if (!user) {
+      toast.error("Please log in to send messages");
+      return;
+    }
+    
     if (!profile || !newMessage.trim()) return;
 
     try {
@@ -162,23 +155,6 @@ const Discussion = () => {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow flex items-center justify-center">
-          <Card className="p-8 text-center max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Login Required</h2>
-            <p className="mb-6">Please log in to access the discussion forum.</p>
-            <Button onClick={() => navigate('/auth')} className="bg-gradient-to-r from-indigo-600 to-purple-700">
-              Go to Login
-            </Button>
-          </Card>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -192,15 +168,29 @@ const Discussion = () => {
         <Card className="p-0 overflow-hidden h-[70vh] flex flex-col shadow-lg border border-purple-100">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-4 border-b flex justify-between items-center text-white">
             <h3 className="font-semibold">Live Chat - SPPU StudyHub</h3>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="p-2 text-white hover:bg-white/10"
-              onClick={() => setIsProfileModalOpen(true)}
-            >
-              <Settings size={16} className="mr-2" />
-              Profile
-            </Button>
+            {user ? (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2 text-white hover:bg-white/10"
+                onClick={() => setIsProfileModalOpen(true)}
+              >
+                <Settings size={16} className="mr-2" />
+                Profile
+              </Button>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2 text-white hover:bg-white/10"
+                asChild
+              >
+                <Link to="/auth">
+                  <LogIn size={16} className="mr-2" />
+                  Login to chat
+                </Link>
+              </Button>
+            )}
           </div>
 
           <ScrollArea className="flex-grow p-4 bg-white">
@@ -260,23 +250,34 @@ const Discussion = () => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your message here..."
+                placeholder={user ? "Type your message here..." : "Login to join the conversation"}
                 className="flex-grow border-purple-200 focus-visible:ring-purple-400"
+                disabled={!user}
               />
               <Button 
                 onClick={handleSendMessage} 
                 className="px-4 bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800"
+                disabled={!user}
               >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
+            {!user && (
+              <p className="text-sm text-center mt-2 text-muted-foreground">
+                <Link to="/auth" className="text-indigo-600 hover:text-indigo-800">
+                  Login or register
+                </Link> to participate in the discussion
+              </p>
+            )}
           </div>
         </Card>
 
-        <ProfileModal 
-          isOpen={isProfileModalOpen}
-          onClose={() => setIsProfileModalOpen(false)}
-        />
+        {profile && (
+          <ProfileModal 
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+          />
+        )}
       </main>
 
       <footer className="bg-gradient-to-r from-gray-100 to-slate-100 py-6 border-t">
