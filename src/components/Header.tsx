@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { MessageSquare, LogIn, LogOut } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -47,19 +47,6 @@ const Header = () => {
               <span className="hidden md:inline">Discussion</span>
             </Link>
           </Button>
-          {user ? (
-            <Button variant="ghost" onClick={handleLogout} className="text-white hover:bg-white/10">
-              <LogOut size={18} className="mr-0 md:mr-2" />
-              <span className="hidden md:inline">Logout</span>
-            </Button>
-          ) : (
-            <Button variant="ghost" asChild className="text-white hover:bg-white/10">
-              <Link to="/auth" className="flex items-center space-x-1">
-                <LogIn size={18} />
-                <span className="hidden md:inline">Login</span>
-              </Link>
-            </Button>
-          )}
         </nav>
       </div>
     </header>
