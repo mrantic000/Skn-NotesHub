@@ -24,11 +24,11 @@ interface Message {
 }
 
 const Discussion = () => {
-  const { profile, loading: profileLoading, ProfileAvatar } = useProfile();
+  const { profile, loading: profileLoading } = useProfile();
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [username, setUsername] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   
@@ -57,7 +57,7 @@ const Discussion = () => {
       if (data) {
         const formattedMessages = data.map(msg => ({
           id: msg.id,
-          user: msg.username,
+          user: msg.username || 'Anonymous',
           message: msg.message,
           timestamp: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           profile_id: msg.profile_id,
@@ -93,7 +93,7 @@ const Discussion = () => {
         
         const formattedMessage = {
           id: newMsg.id,
-          user: newMsg.username,
+          user: newMsg.username || 'Anonymous',
           message: newMsg.message,
           timestamp: new Date(newMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           profile_id: newMsg.profile_id,
@@ -114,18 +114,15 @@ const Discussion = () => {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!user) {
-      toast.error("Please log in to send messages");
-      return;
-    }
+    const messageUser = profile?.username || username || 'Anonymous';
     
-    if (!profile || !newMessage.trim()) return;
+    if (!newMessage.trim()) return;
 
     try {
       const { error } = await supabase.from('discussion_messages').insert({
-        username: profile.username,
+        username: messageUser,
         message: newMessage,
-        profile_id: profile.id
+        profile_id: profile?.id || null
       });
       
       if (error) throw error;
@@ -144,17 +141,6 @@ const Discussion = () => {
     }
   };
 
-  if (profileLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-lg">Loading chat...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -168,29 +154,6 @@ const Discussion = () => {
         <Card className="p-0 overflow-hidden h-[70vh] flex flex-col shadow-lg border border-purple-100">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-4 border-b flex justify-between items-center text-white">
             <h3 className="font-semibold">Live Chat - SPPU StudyHub</h3>
-            {user ? (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-2 text-white hover:bg-white/10"
-                onClick={() => setIsProfileModalOpen(true)}
-              >
-                <Settings size={16} className="mr-2" />
-                Profile
-              </Button>
-            ) : (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-2 text-white hover:bg-white/10"
-                asChild
-              >
-                <Link to="/auth">
-                  <LogIn size={16} className="mr-2" />
-                  Login to chat
-                </Link>
-              </Button>
-            )}
           </div>
 
           <ScrollArea className="flex-grow p-4 bg-white">
@@ -245,39 +208,31 @@ const Discussion = () => {
           </ScrollArea>
 
           <div className="p-4 border-t bg-white">
+            {!profile && (
+              <Input 
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your name (optional)"
+                className="mb-2 border-purple-200 focus-visible:ring-purple-400"
+              />
+            )}
             <div className="flex gap-2">
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={user ? "Type your message here..." : "Login to join the conversation"}
+                placeholder="Type your message here..."
                 className="flex-grow border-purple-200 focus-visible:ring-purple-400"
-                disabled={!user}
               />
               <Button 
                 onClick={handleSendMessage} 
                 className="px-4 bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800"
-                disabled={!user}
               >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-            {!user && (
-              <p className="text-sm text-center mt-2 text-muted-foreground">
-                <Link to="/auth" className="text-indigo-600 hover:text-indigo-800">
-                  Login or register
-                </Link> to participate in the discussion
-              </p>
-            )}
           </div>
         </Card>
-
-        {profile && (
-          <ProfileModal 
-            isOpen={isProfileModalOpen}
-            onClose={() => setIsProfileModalOpen(false)}
-          />
-        )}
       </main>
 
       <footer className="bg-gradient-to-r from-gray-100 to-slate-100 py-6 border-t">
@@ -290,3 +245,4 @@ const Discussion = () => {
 };
 
 export default Discussion;
+
